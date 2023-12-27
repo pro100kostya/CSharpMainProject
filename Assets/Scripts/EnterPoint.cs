@@ -21,6 +21,11 @@ public class EnterPoint : MonoBehaviour
     Спасибо за внимание
     /*/
 
+    //Ещё раз привет
+    /*/ Вспоминаю полученные знания
+    Пожелайте мне удачи!
+    /*/
+
     void Start()
     {
         Time.timeScale = _timeScale;
