@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,14 +9,18 @@ public class NewBehaviourScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        int i = 3;
-        int j = 2;
-        int k = i - j;
-        
-        Debug.Log(10 / k);
+        int x = 10;
+        x += 5;//15
+        x -= 3;//12
+        x *= 2;//24
+        x /= 4;//6
 
-        Debug.Log("Hello");
+        x++;//7
+        x--;//6
+
+        
     }
+
 
 
 }
