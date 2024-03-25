@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
-using ActionGameFramework.Projectiles;
+using Codice.CM.Common.Tree.Partial;
+using GluonGui.Dialog;
+using Model;
 using Model.Runtime.Projectiles;
 using Unity.VisualScripting;
 using UnityEngine;
+using Utilities;
 
 namespace UnitBrains.Player
 {
@@ -14,6 +17,7 @@ namespace UnitBrains.Player
         private float _temperature = 0f;
         private float _cooldownTime = 0f;
         private bool _overheated;
+        public List<Vector2Int> TargetOutOfRange;
 
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
@@ -32,36 +36,66 @@ namespace UnitBrains.Player
   
         public override Vector2Int GetNextStep()
         {
-            return base.GetNextStep();
+           if (TargetOutOfRange.Count > 0)
+            {
+                var targetOutOfRange = TargetOutOfRange[0];
+                return unit.Pos.CalcNextStepTowards(targetOutOfRange);
+            }
+           else
+            {
+                return unit.Pos;
+            }
         }
 
-        protected override List<Vector2Int> SelectTargets()
+        protected override List<Vector2Int> SelectTargets()             // тут домашка
         {
             List<Vector2Int> result = GetReachableTargets();
 
             float min = float.MaxValue;
-            var RightTarget = Vector2Int.zero;
+            var rightTarget = Vector2Int.zero;
+            TargetOutOfRange = new();
 
-            while (result.Count > 1)
+            if (result.Count > 0)
             {
-                foreach (var target in result)
+                foreach (var target in GetAllTargets())
                 {
-                    var MinDistance = DistanceToOwnBase(target);
-                    if (MinDistance < min)
+                    var minDistance = DistanceToOwnBase(target);
+                    if (minDistance < min)
                     {
-                        min = MinDistance;
-                        RightTarget = target;
+                        min = minDistance;
+                        rightTarget = target;
                     }
                 }
-                if (min != float.MaxValue)
+                if (min != float.MaxValue && IsTargetInRange(rightTarget))
                 {
                     result.Clear();
-                    result.Add(RightTarget);
+                    result.Add(rightTarget);
+                }
+                if (min != float.MaxValue && !IsTargetInRange(rightTarget))
+                {
+                    TargetOutOfRange.Clear();
+                    TargetOutOfRange.Add(rightTarget);
+                }
+            }
+            else
+            {
+                var enemyBase = runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId];
+                if (IsTargetInRange(enemyBase))
+                {
+                    result.Clear();
+                    result.Add(enemyBase);
+                }
+                else
+                {
+                    TargetOutOfRange.Clear();
+                    TargetOutOfRange.Add(enemyBase);
                 }
                 
             }
+
+
+
             return result;
-           
         }
 
         public override void Update(float deltaTime, float time)
