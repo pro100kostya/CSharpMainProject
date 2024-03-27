@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Codice.CM.Common.Tree.Partial;
 using GluonGui.Dialog;
 using Model;
@@ -17,7 +18,7 @@ namespace UnitBrains.Player
         private float _temperature = 0f;
         private float _cooldownTime = 0f;
         private bool _overheated;
-        public List<Vector2Int> TargetOutOfRange;
+        public List<Vector2Int> TargetOutOfRange = new();
 
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
@@ -25,7 +26,7 @@ namespace UnitBrains.Player
             float temp = GetTemperature();
 
             if (temp >= overheatTemperature) return;
-            
+
             for (int i = 0; i <= temp; i++)
             {
                 var projectile = CreateProjectile(forTarget);
@@ -33,31 +34,30 @@ namespace UnitBrains.Player
             }
             IncreaseTemperature();
         }
-  
+
         public override Vector2Int GetNextStep()
         {
-           if (TargetOutOfRange.Count > 0)
+            if (TargetOutOfRange.Any())
             {
                 var targetOutOfRange = TargetOutOfRange[0];
                 return unit.Pos.CalcNextStepTowards(targetOutOfRange);
             }
-           else
+            else
             {
                 return unit.Pos;
             }
+            
         }
 
-        protected override List<Vector2Int> SelectTargets()             // тут домашка
+        protected override List<Vector2Int> SelectTargets()
         {
             List<Vector2Int> result = GetReachableTargets();
-
+            List<Vector2Int> allTargets = new List<Vector2Int>(GetAllTargets());
             float min = float.MaxValue;
             var rightTarget = Vector2Int.zero;
-            TargetOutOfRange = new();
-
-            if (result.Count > 0)
+            if (allTargets.Any())
             {
-                foreach (var target in GetAllTargets())
+                foreach (var target in allTargets)
                 {
                     var minDistance = DistanceToOwnBase(target);
                     if (minDistance < min)
@@ -79,7 +79,8 @@ namespace UnitBrains.Player
             }
             else
             {
-                var enemyBase = runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId];
+               
+                var enemyBase = runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId];
                 if (IsTargetInRange(enemyBase))
                 {
                     result.Clear();
@@ -90,7 +91,7 @@ namespace UnitBrains.Player
                     TargetOutOfRange.Clear();
                     TargetOutOfRange.Add(enemyBase);
                 }
-                
+
             }
 
 
@@ -101,9 +102,9 @@ namespace UnitBrains.Player
         public override void Update(float deltaTime, float time)
         {
             if (_overheated)
-            {              
+            {
                 _cooldownTime += Time.deltaTime;
-                float t = _cooldownTime / (OverheatCooldown/10);
+                float t = _cooldownTime / (OverheatCooldown / 10);
                 _temperature = Mathf.Lerp(OverheatTemperature, 0, t);
                 if (t >= 1)
                 {
@@ -115,7 +116,7 @@ namespace UnitBrains.Player
 
         private int GetTemperature()
         {
-            if(_overheated) return (int) OverheatTemperature;
+            if (_overheated) return (int)OverheatTemperature;
             else return (int)_temperature;
         }
 
