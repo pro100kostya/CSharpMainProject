@@ -18,7 +18,7 @@ namespace UnitBrains.Player
         private float _temperature = 0f;
         private float _cooldownTime = 0f;
         private bool _overheated;
-        public List<Vector2Int> TargetOutOfRange = new();
+        public List<Vector2Int> TargetsOutOfRange = new();
 
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
@@ -37,14 +37,14 @@ namespace UnitBrains.Player
 
         public override Vector2Int GetNextStep()
         {
-            if (TargetOutOfRange.Any())
+            Vector2Int target = TargetsOutOfRange.Count > 0 ? TargetsOutOfRange[0] : unit.Pos;
+            if (IsTargetInRange(target))
             {
-                var targetOutOfRange = TargetOutOfRange[0];
-                return unit.Pos.CalcNextStepTowards(targetOutOfRange);
+                return unit.Pos;
             }
             else
             {
-                return unit.Pos;
+                return unit.Pos.CalcNextStepTowards(target);
             }
             
         }
@@ -73,8 +73,8 @@ namespace UnitBrains.Player
                 }
                 if (min != float.MaxValue && !IsTargetInRange(rightTarget))
                 {
-                    TargetOutOfRange.Clear();
-                    TargetOutOfRange.Add(rightTarget);
+                    TargetsOutOfRange.Clear();
+                    TargetsOutOfRange.Add(rightTarget);
                 }
             }
             else
@@ -88,8 +88,8 @@ namespace UnitBrains.Player
                 }
                 else
                 {
-                    TargetOutOfRange.Clear();
-                    TargetOutOfRange.Add(enemyBase);
+                    TargetsOutOfRange.Clear();
+                    TargetsOutOfRange.Add(enemyBase);
                 }
 
             }
