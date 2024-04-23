@@ -18,7 +18,7 @@ namespace UnitBrains.Player
         private float _temperature = 0f;
         private float _cooldownTime = 0f;
         private bool _overheated;
-        public List<Vector2Int> TargetsOutOfRange = new();
+        private List<Vector2Int> TargetsOutOfRange = new();
 
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
@@ -51,13 +51,11 @@ namespace UnitBrains.Player
 
         protected override List<Vector2Int> SelectTargets()
         {
-            List<Vector2Int> result = GetReachableTargets();
-            List<Vector2Int> allTargets = new List<Vector2Int>(GetAllTargets());
+            List<Vector2Int> result = new List<Vector2Int>();
             float min = float.MaxValue;
             var rightTarget = Vector2Int.zero;
-            if (allTargets.Any())
-            {
-                foreach (var target in allTargets)
+           
+                foreach (var target in GetAllTargets())
                 {
                     var minDistance = DistanceToOwnBase(target);
                     if (minDistance < min)
@@ -66,35 +64,19 @@ namespace UnitBrains.Player
                         rightTarget = target;
                     }
                 }
-                if (min != float.MaxValue && IsTargetInRange(rightTarget))
+
+                TargetsOutOfRange.Clear();
+
+                if (min != float.MaxValue)
                 {
-                    result.Clear();
-                    result.Add(rightTarget);
-                }
-                if (min != float.MaxValue && !IsTargetInRange(rightTarget))
-                {
-                    TargetsOutOfRange.Clear();
                     TargetsOutOfRange.Add(rightTarget);
-                }
-            }
-            else
-            {
-               
-                var enemyBase = runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId];
-                if (IsTargetInRange(enemyBase))
-                {
-                    result.Clear();
-                    result.Add(enemyBase);
+                    if(IsTargetInRange(rightTarget)) result.Add(rightTarget);
                 }
                 else
                 {
-                    TargetsOutOfRange.Clear();
+                    var enemyBase = runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId];
                     TargetsOutOfRange.Add(enemyBase);
                 }
-
-            }
-
-
 
             return result;
         }
