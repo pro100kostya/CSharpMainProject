@@ -19,6 +19,10 @@ namespace UnitBrains.Player
         private float _cooldownTime = 0f;
         private bool _overheated;
         private List<Vector2Int> TargetsOutOfRange = new();
+        private static int UnitCounter = 0;
+        private int UnitID = UnitCounter++ % MaxUnitID;
+        private const int MaxUnitID = 3;
+        
 
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
@@ -52,33 +56,67 @@ namespace UnitBrains.Player
         protected override List<Vector2Int> SelectTargets()
         {
             List<Vector2Int> result = new List<Vector2Int>();
+            List<Vector2Int> rightTargets = new List<Vector2Int>();
             float min = float.MaxValue;
-            var rightTarget = Vector2Int.zero;
-           
-                foreach (var target in GetAllTargets())
+
+            foreach (var target in GetAllTargets())
                 {
                     var minDistance = DistanceToOwnBase(target);
                     if (minDistance < min)
                     {
                         min = minDistance;
-                        rightTarget = target;
+                        rightTargets.Add(target);
                     }
                 }
 
                 TargetsOutOfRange.Clear();
+                SortByDistanceToOwnBase(rightTargets);
 
-                if (min != float.MaxValue)
+                if (rightTargets.Any())
                 {
-                    TargetsOutOfRange.Add(rightTarget);
-                    if(IsTargetInRange(rightTarget)) result.Add(rightTarget);
+                switch(UnitID)
+                {
+                    case 0:
+                        TargetsOutOfRange.Add(rightTargets[0]);
+                        if (IsTargetInRange(rightTargets[0])) result.Add(rightTargets[0]);
+                        break;
+                    case 1:
+                        if (rightTargets.Count >= 2)
+                        {
+                            TargetsOutOfRange.Add(rightTargets[1]);
+                            if (IsTargetInRange(rightTargets[1])) result.Add(rightTargets[1]);
+                        }
+                        else
+                        {
+                            TargetsOutOfRange.Add(rightTargets[0]);
+                            if (IsTargetInRange(rightTargets[0])) result.Add(rightTargets[0]);
+                        }
+                        break;
+                    case 2:
+                        if (rightTargets.Count >= 3)
+                        {
+                            TargetsOutOfRange.Add(rightTargets[2]);
+                            if (IsTargetInRange(rightTargets[2])) result.Add(rightTargets[2]);
+                        }
+                        else
+                        {
+                            TargetsOutOfRange.Add(rightTargets[0]);
+                            if (IsTargetInRange(rightTargets[0])) result.Add(rightTargets[0]);
+                        }
+                        break;
+                    default:
+                        TargetsOutOfRange.Add(rightTargets[0]);
+                        if (IsTargetInRange(rightTargets[0])) result.Add(rightTargets[0]);
+                        break;
+                }
                 }
                 else
                 {
                     var enemyBase = runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId];
                     TargetsOutOfRange.Add(enemyBase);
                 }
-
             return result;
+
         }
 
         public override void Update(float deltaTime, float time)
