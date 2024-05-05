@@ -20,7 +20,7 @@ namespace UnitBrains.Player
         private bool _overheated;
         private List<Vector2Int> TargetsOutOfRange = new();
         private static int UnitCounter = 0;
-        private int UnitID = UnitCounter++ % MaxUnitID;
+        private int UnitID = UnitCounter++;
         private const int MaxUnitID = 3;
         
 
@@ -56,67 +56,27 @@ namespace UnitBrains.Player
         protected override List<Vector2Int> SelectTargets()
         {
             List<Vector2Int> result = new List<Vector2Int>();
-            List<Vector2Int> rightTargets = new List<Vector2Int>();
-            float min = float.MaxValue;
-
+            TargetsOutOfRange.Clear();
+            
             foreach (var target in GetAllTargets())
-                {
-                    var minDistance = DistanceToOwnBase(target);
-                    if (minDistance < min)
-                    {
-                        min = minDistance;
-                        rightTargets.Add(target);
-                    }
-                }
+            {
+                TargetsOutOfRange.Add(target);
+            }
 
-                TargetsOutOfRange.Clear();
-                SortByDistanceToOwnBase(rightTargets);
+            if (TargetsOutOfRange.Count == 0)
+            {
+                TargetsOutOfRange.Add(runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId]);
+            }
 
-                if (rightTargets.Any())
-                {
-                switch(UnitID)
-                {
-                    case 0:
-                        TargetsOutOfRange.Add(rightTargets[0]);
-                        if (IsTargetInRange(rightTargets[0])) result.Add(rightTargets[0]);
-                        break;
-                    case 1:
-                        if (rightTargets.Count >= 2)
-                        {
-                            TargetsOutOfRange.Add(rightTargets[1]);
-                            if (IsTargetInRange(rightTargets[1])) result.Add(rightTargets[1]);
-                        }
-                        else
-                        {
-                            TargetsOutOfRange.Add(rightTargets[0]);
-                            if (IsTargetInRange(rightTargets[0])) result.Add(rightTargets[0]);
-                        }
-                        break;
-                    case 2:
-                        if (rightTargets.Count >= 3)
-                        {
-                            TargetsOutOfRange.Add(rightTargets[2]);
-                            if (IsTargetInRange(rightTargets[2])) result.Add(rightTargets[2]);
-                        }
-                        else
-                        {
-                            TargetsOutOfRange.Add(rightTargets[0]);
-                            if (IsTargetInRange(rightTargets[0])) result.Add(rightTargets[0]);
-                        }
-                        break;
-                    default:
-                        TargetsOutOfRange.Add(rightTargets[0]);
-                        if (IsTargetInRange(rightTargets[0])) result.Add(rightTargets[0]);
-                        break;
-                }
-                }
-                else
-                {
-                    var enemyBase = runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId];
-                    TargetsOutOfRange.Add(enemyBase);
-                }
+            SortByDistanceToOwnBase(TargetsOutOfRange);
+
+            int targetNum = UnitID % MaxUnitID;
+            int bestTargetNum = Mathf.Min(targetNum, TargetsOutOfRange.Count - 1);
+            Vector2Int bestTarget = TargetsOutOfRange[bestTargetNum];
+
+            if(IsTargetInRange(bestTarget)) result.Add(bestTarget);
+
             return result;
-
         }
 
         public override void Update(float deltaTime, float time)
